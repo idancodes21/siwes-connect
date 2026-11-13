@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import StudentDashboardShell from "@/components/student-dashboard-shell";
+import StudentDashboardShell from "@/components/student/student-dashboard-shell";
 
 export default function StudentLayout({
   children,

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -65,6 +66,14 @@ export default function RegistrationForm({
     initialState,
   );
 
+  const router = useRouter();
+
+useEffect(() => {
+  if (state.success) {
+    router.replace("/login");
+  }
+}, [state.success, router]);
+
   const [role, setRole] = useState<RegistrationRole>("STUDENT");
   const [institutionId, setInstitutionId] = useState("");
 
@@ -94,36 +103,7 @@ export default function RegistrationForm({
       </Link>
 
       <div className="w-full max-w-2xl">
-        {/* Brand */}
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <GraduationCap className="h-10 w-10 text-primary" strokeWidth={2.2} />
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-            University Portal
-          </h1>
-        </div>
-
-        {state.success ? (
-          <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm sm:p-10">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-600">
-              <CheckCircle2 className="h-9 w-9" />
-            </div>
-
-            <h2 className="text-2xl font-extrabold text-foreground">
-              Account created!
-            </h2>
-
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              {state.message} You can now sign in using your email and password.
-            </p>
-
-            <Link
-              href="/login"
-              className="mt-7 inline-flex h-12 items-center justify-center rounded-xl bg-primary px-8 font-bold text-white hover:bg-primary/90"
-            >
-              Continue to Login
-            </Link>
-          </div>
-        ) : (
+       {state.success ? null :  (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-9">
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-extrabold tracking-tight text-foreground">

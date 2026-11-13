@@ -17,6 +17,7 @@ import {
   GraduationCap,
   ChevronRight,
 } from "lucide-react";
+import StudentSignOutButton from "./student-sign-out-button";
 
 type StudentUser = {
   name?: string | null;
@@ -150,14 +151,7 @@ export default function StudentDashboardShell({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => signOut({ redirectTo: "/login" })}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
+         <StudentSignOutButton />
         </div>
       </div>
     );
