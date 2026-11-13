@@ -33,7 +33,7 @@ type StudentDashboardShellProps = {
 const navigation = [
   {
     label: "Overview",
-    href: "/student/dashboard",
+    href: "/student",
     icon: LayoutDashboard,
   },
   {
