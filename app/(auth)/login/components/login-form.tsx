@@ -47,9 +47,9 @@ export default function LoginForm() {
       const role = session?.user?.role;
 
       const dashboardRoutes: Record<string, string> = {
-        STUDENT: "/student/dashboard",
-        HOD: "/hod/dashboard",
-        EMPLOYER: "/employer/dashboard",
+        STUDENT: "/student",
+        HOD: "/hod",
+        EMPLOYER: "/employer",
       };
 
       const destination = role
