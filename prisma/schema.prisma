@@ -1,0 +1,334 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ENUMS
+
+enum UserRole {
+  STUDENT
+  HOD
+  EMPLOYER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum PlacementStatus {
+  ACTIVE
+  COMPLETED
+  TERMINATED
+}
+
+// USER
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  phone         String?
+  role          UserRole
+  isActive      Boolean   @default(true)
+
+  // Auth.js relations
+  accounts Account[]
+  sessions Session[]
+
+  // Profile relations
+  student  StudentProfile?
+  hod      HodProfile?
+  employer EmployerProfile?
+
+  // Activity relations
+  createdListings InternshipListing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@index([isActive])
+}
+
+// AUTHENTICATION
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// SCHOOL / INSTITUTION
+
+model Institution {
+  id      String  @id @default(cuid())
+  name    String
+  acronym String?
+  email   String?
+  website String?
+  address String?
+  city    String?
+  state   String?
+  country String  @default("Nigeria")
+  logo    String?
+
+  departments Department[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, country])
+  @@index([name])
+}
+
+// DEPARTMENT
+
+model Department {
+  id            String  @id @default(cuid())
+  name          String
+  code          String?
+  institutionId String
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  students StudentProfile[]
+  hod      HodProfile?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([institutionId, name])
+  @@unique([institutionId, code])
+  @@index([institutionId])
+}
+
+// STUDENT
+
+model StudentProfile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  matricNumber   String    @unique
+  departmentId   String
+  gender         Gender?
+  dateOfBirth    DateTime?
+  level          Int?
+  graduationYear Int?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  applications Application[]
+  placements   Placement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([departmentId])
+}
+
+// HEAD OF DEPARTMENT
+
+model HodProfile {
+  id           String @id @default(cuid())
+  userId       String @unique
+  departmentId String @unique
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([departmentId])
+}
+
+// COMPANY
+
+model Company {
+  id             String  @id @default(cuid())
+  name           String
+  registrationNo String? @unique
+  email          String?
+  phone          String?
+  website        String?
+  industry       String?
+  description    String? @db.Text
+  address        String?
+  city           String?
+  state          String?
+  country        String  @default("Nigeria")
+  logo           String?
+
+  employers  EmployerProfile[]
+  listings   InternshipListing[]
+  placements Placement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([industry])
+}
+
+// EMPLOYER
+
+model EmployerProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  companyId String
+
+  jobTitle String?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+// INTERNSHIP OPPORTUNITIES
+
+model InternshipListing {
+  id          String @id @default(cuid())
+  companyId   String
+  createdById String
+
+  title            String
+  description      String        @db.Text
+  requirements     String?       @db.Text
+  responsibilities String?       @db.Text
+  location         String?
+  isRemote         Boolean       @default(false)
+  durationMonths   Int?
+  positions        Int           @default(1)
+  deadline         DateTime?
+  status           ListingStatus @default(DRAFT)
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy User    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  applications Application[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([createdById])
+  @@index([status])
+  @@index([deadline])
+}
+
+// APPLICATIONS
+
+model Application {
+  id        String @id @default(cuid())
+  studentId String
+  listingId String
+
+  coverLetter String?           @db.Text
+  status      ApplicationStatus @default(PENDING)
+  appliedAt   DateTime          @default(now())
+  reviewedAt  DateTime?
+  reviewNote  String?           @db.Text
+
+  student StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  listing InternshipListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  placement Placement?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, listingId])
+  @@index([studentId])
+  @@index([listingId])
+  @@index([status])
+}
+
+// STUDENT PLACEMENTS
+
+model Placement {
+  id            String @id @default(cuid())
+  applicationId String @unique
+  studentId     String
+  companyId     String
+
+  startDate DateTime?
+  endDate   DateTime?
+  status    PlacementStatus @default(ACTIVE)
+
+  supervisorName  String?
+  supervisorEmail String?
+  supervisorPhone String?
+
+  application Application    @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  company     Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([companyId])
+  @@index([status])
+}
