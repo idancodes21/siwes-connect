@@ -1,26 +1,116 @@
+
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-manrope), sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: light;
+
+  --background: #f3f6fb;
+  --foreground: #2d4054;
+
+  --card: #ffffff;
+  --card-foreground: #2d4054;
+
+  --primary: #0752b8;
+  --primary-foreground: #ffffff;
+
+  --muted: #e8eef7;
+  --muted-foreground: #74798b;
+
+  --border: #e2e5ea;
+  --input: #e2e5ea;
+  --ring: #0752b8;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #101827;
+  --foreground: #e8edf5;
+
+  --card: #182438;
+  --card-foreground: #e8edf5;
+
+  --primary: #4b91f1;
+  --primary-foreground: #ffffff;
+
+  --muted: #25344b;
+  --muted-foreground: #a0aec0;
+
+  --border: #2d3b50;
+  --input: #2d3b50;
+  --ring: #4b91f1;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+::selection {
+  background: #0752b8;
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
