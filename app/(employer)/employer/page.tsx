@@ -11,34 +11,114 @@ import {
   FileText,
 } from "lucide-react";
 
-const stats = [
-  {
-    label: "Total Listings",
-    value: "—",
-    description: "All internship opportunities",
-    icon: BriefcaseBusiness,
-  },
-  {
-    label: "Published Listings",
-    value: "—",
-    description: "Currently accepting applications",
-    icon: CheckCircle2,
-  },
-  {
-    label: "Applications Received",
-    value: "—",
-    description: "Applications from students",
-    icon: FileClock,
-  },
-  {
-    label: "Active Placements",
-    value: "—",
-    description: "Students currently on SIWES",
-    icon: Users,
-  },
-];
+import { prisma } from "@/lib/prisma";
+import { getEmployerContext } from "@/lib/employer";
+import { Suspense } from "react";
 
 export default function EmployerDashboardPage() {
+  return (
+    <Suspense fallback={<EmployerDashboardLoading />}>
+      <EmployerDashboardContent />
+    </Suspense>
+  );
+}
+
+async function EmployerDashboardContent() {
+  const { companyId } = await getEmployerContext();
+
+  const [
+    totalListings,
+    publishedListings,
+    applicationsReceived,
+    activePlacements,
+    recentApplications,
+  ] = await Promise.all([
+    prisma.internshipListing.count({
+      where: {
+        companyId,
+      },
+    }),
+
+    prisma.internshipListing.count({
+      where: {
+        companyId,
+        status: "PUBLISHED",
+      },
+    }),
+
+    prisma.application.count({
+      where: {
+        listing: {
+          companyId,
+        },
+      },
+    }),
+
+    prisma.placement.count({
+      where: {
+        companyId,
+        status: "ACTIVE",
+      },
+    }),
+
+    prisma.application.findMany({
+      where: {
+        listing: {
+          companyId,
+        },
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        },
+        listing: {
+          select: {
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        appliedAt: "desc",
+      },
+      take: 5,
+    }),
+  ]);
+
+  const stats = [
+    {
+      label: "Total Listings",
+      value: totalListings,
+      description: "All internship opportunities",
+      icon: BriefcaseBusiness,
+    },
+    {
+      label: "Published Listings",
+      value: publishedListings,
+      description: "Currently accepting applications",
+      icon: CheckCircle2,
+    },
+    {
+      label: "Applications Received",
+      value: applicationsReceived,
+      description: "Applications from students",
+      icon: FileClock,
+    },
+    {
+      label: "Active Placements",
+      value: activePlacements,
+      description: "Students currently on SIWES",
+      icon: Users,
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       {/* Welcome section */}
@@ -117,16 +197,53 @@ export default function EmployerDashboardPage() {
             </Link>
           </div>
 
-          <div className="mt-8 flex min-h-48 flex-col items-center justify-center rounded-xl border border-dashed px-4 text-center">
-            <FileClock className="mb-3 h-8 w-8 text-muted-foreground/50" />
+          {recentApplications.length === 0 ? (
+            <div className="mt-8 flex min-h-48 flex-col items-center justify-center rounded-xl border border-dashed px-4 text-center">
+              <FileClock className="mb-3 h-8 w-8 text-muted-foreground/50" />
 
-            <p className="text-sm font-medium">No applications yet</p>
+              <p className="text-sm font-medium">No applications yet</p>
 
-            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              Applications submitted by students for your internship listings
-              will appear here.
-            </p>
-          </div>
+              <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                Applications submitted by students for your internship listings
+                will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 divide-y">
+              {recentApplications.map((application) => (
+                <div
+                  key={application.id}
+                  className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {application.student.user.name || "Unnamed Student"}
+                    </p>
+
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {application.student.user.email}
+                    </p>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Applied for: {application.listing.title}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 flex-row items-center justify-between gap-3 sm:flex-col sm:items-end">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium capitalize text-primary">
+                      {application.status.toLowerCase().replace("_", " ")}
+                    </span>
+
+                    <p className="text-xs text-muted-foreground">
+                      {new Intl.DateTimeFormat("en-NG", {
+                        dateStyle: "medium",
+                      }).format(application.appliedAt)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
@@ -193,12 +310,33 @@ function QuickLink({
 
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">{label}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {description}
-        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
       </div>
 
       <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
     </Link>
+  );
+}
+
+function EmployerDashboardLoading() {
+  return (
+    <div className="mx-auto max-w-7xl space-y-8 animate-pulse">
+      <section className="space-y-3">
+        <div className="h-4 w-32 rounded bg-muted" />
+        <div className="h-8 w-80 max-w-full rounded bg-muted" />
+        <div className="h-4 w-96 max-w-full rounded bg-muted" />
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-36 rounded-2xl border bg-card" />
+        ))}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-3">
+        <div className="h-80 rounded-2xl border bg-card lg:col-span-2" />
+        <div className="h-80 rounded-2xl border bg-card" />
+      </section>
+    </div>
   );
 }
