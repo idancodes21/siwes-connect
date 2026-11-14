@@ -82,12 +82,12 @@ export default function EmployerDashboardShell({
     .toUpperCase();
 
   function isActive(href: string) {
-    if (href === "/employer/dashboard") {
-      return pathname === href || pathname === "/employer";
-    }
-
-    return pathname === href || pathname.startsWith(`${href}/`);
+  if (href === "/employer") {
+    return pathname === "/employer" || pathname === "/employer/dashboard";
   }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
   function SidebarContent() {
     return (
