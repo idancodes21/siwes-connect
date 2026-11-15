@@ -5,7 +5,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Send } from "lucide-react";
 
-import { submitApplication,type ApplicationFormState, } from "./action"; 
+import { submitApplication,type ApplicationFormState, } from "../../app/(student)/student/internships/[id]/apply/action"; 
 
 const initialState: ApplicationFormState = {
   success: false,
