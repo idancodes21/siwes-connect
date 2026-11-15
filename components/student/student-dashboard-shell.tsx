@@ -75,12 +75,12 @@ export default function StudentDashboardShell({
       .toUpperCase() || "ST";
 
   function isActive(href: string) {
-    if (href === "/student/dashboard") {
-      return pathname === href;
-    }
-
-    return pathname === href || pathname.startsWith(`${href}/`);
+  if (href === "/student") {
+    return pathname === "/student" || pathname === "/student";
   }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
   function SidebarContent() {
     return (
