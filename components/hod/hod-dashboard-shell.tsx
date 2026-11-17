@@ -43,16 +43,6 @@ const navigation = [
     icon: Users,
   },
   {
-    label: "Applications",
-    href: "/hod/applications",
-    icon: FileText,
-  },
-  {
-    label: "Placements",
-    href: "/hod/placements",
-    icon: BriefcaseBusiness,
-  },
-  {
     label: "Reports",
     href: "/hod/reports",
     icon: ChartNoAxesCombined,
