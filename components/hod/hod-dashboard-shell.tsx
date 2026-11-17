@@ -81,7 +81,7 @@ export default function HodDashboardShell({
     .toUpperCase();
 
   function isActive(href: string) {
-    if (href === "/hod/dashboard") {
+    if (href === "/hod") {
       return pathname === href || pathname === "/hod";
     }
 
